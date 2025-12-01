@@ -5,13 +5,15 @@ import Textarea from "@/components/atoms/Textarea";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import ApperFileFieldComponent from "@/components/atoms/FileUploader/ApperFileFieldComponent";
 
 const TaskForm = ({ onAddTask }) => {
-  const [title, setTitle] = useState("")
+const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [priority, setPriority] = useState("medium")
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadedFiles, setUploadedFiles] = useState([])
 const validateForm = () => {
     const newErrors = {}
     
@@ -24,7 +26,7 @@ const validateForm = () => {
     return newErrors
   }
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault()
     
     const formErrors = validateForm()
@@ -35,18 +37,35 @@ const validateForm = () => {
     setIsSubmitting(true)
     
     try {
-      await onAddTask({
+      // Get files from the file uploader
+      const { ApperFileUploader } = window.ApperSDK;
+      const files = await ApperFileUploader.FileField.getFiles('task_files_c');
+      
+      const taskData = {
         title_c: title.trim(),
         description_c: description.trim(),
         priority_c: priority,
         status_c: "active"
-      })
+      };
+
+      // Add files if they exist
+      if (files && files.length > 0) {
+        taskData.task_files_c = files;
+      }
+
+      await onAddTask(taskData);
       
       // Reset form
       setTitle("")
       setDescription("")
       setPriority("medium")
       setErrors({})
+      setUploadedFiles([])
+      
+      // Clear the file uploader
+      if (window.ApperSDK?.ApperFileUploader) {
+        ApperFileUploader.FileField.clearField('task_files_c');
+      }
     } catch (error) {
       console.error("Error adding task:", error)
     } finally {
@@ -145,6 +164,24 @@ const validateForm = () => {
                 />
               </div>
             </div>
+          </div>
+
+<div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Attach Files
+            </label>
+            <ApperFileFieldComponent
+              elementId="task_files_c"
+              config={{
+                fieldKey: 'task_files_c',
+                fieldName: 'task_files_c',
+                tableName: 'task_c',
+                apperProjectId: import.meta.env.VITE_APPER_PROJECT_ID,
+                apperPublicKey: import.meta.env.VITE_APPER_PUBLIC_KEY,
+                existingFiles: uploadedFiles,
+                fileCount: uploadedFiles.length
+              }}
+            />
           </div>
 
           <div className="flex justify-end pt-4">

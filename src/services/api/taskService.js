@@ -81,19 +81,20 @@ export const taskService = {
         throw new Error("ApperClient not initialized")
       }
 
-      const params = {
+const params = {
         records: [
           {
             Name: taskData.title_c || taskData.title || "New Task",
             title_c: taskData.title_c || taskData.title || "New Task",
             description_c: taskData.description_c || taskData.description || "",
             priority_c: taskData.priority_c || taskData.priority || "medium",
-            status_c: taskData.status_c || taskData.status || "active"
+            status_c: taskData.status_c || taskData.status || "active",
+            task_files_c: taskData.task_files_c || []
           }
         ]
       }
 
-      const response = await apperClient.createRecord('task_c', params)
+const response = await apperClient.createRecord('task_c', params)
 
       if (!response.success) {
         console.error(response.message)
@@ -112,7 +113,11 @@ export const taskService = {
             if (record.message) toast.error(record.message)
           })
         }
-        return successful.length > 0 ? successful[0].data : null
+        
+        if (successful.length > 0) {
+          toast.success('Task created successfully!')
+          return successful[0].data
+        }
       }
     } catch (error) {
       console.error("Error creating task:", error?.response?.data?.message || error)
