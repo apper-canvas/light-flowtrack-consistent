@@ -22,7 +22,6 @@ const validateForm = () => {
     } else if (title.trim().length > 100) {
       newErrors.title = "Title must be 100 characters or less"
     }
-    
     return newErrors
   }
 
@@ -40,7 +39,6 @@ const handleSubmit = async (e) => {
       // Get files from the file uploader
       const { ApperFileUploader } = window.ApperSDK;
       const files = await ApperFileUploader.FileField.getFiles('task_files_c');
-      console.log("files:",files)
       const taskData = {
         title_c: title.trim(),
         description_c: description.trim(),
@@ -52,7 +50,7 @@ const handleSubmit = async (e) => {
       if (files && files.length > 0) {
         taskData.task_files_c = files;
       }
-
+      console.log("files:", files)
       await onAddTask(taskData);
       
       // Reset form
