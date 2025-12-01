@@ -37,8 +37,9 @@ const loadTasks = async () => {
   }, [])
 
 const handleAddTask = async (taskData) => {
+    let newTask = null
     try {
-      const newTask = await taskService.create(taskData)
+      newTask = await taskService.create(taskData)
       if (newTask) {
         setTasks(prev => [newTask, ...prev])
         toast.success("Task added successfully!")
