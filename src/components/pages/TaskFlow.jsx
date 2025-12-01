@@ -47,6 +47,7 @@ const handleAddTask = async (taskData) => {
       toast.error("Failed to add task")
       console.error("Error adding task:", err)
     }
+    return newTask
   }
 
 const handleUpdateTask = async (id, updates) => {
