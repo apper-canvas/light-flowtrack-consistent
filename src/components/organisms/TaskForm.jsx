@@ -1,10 +1,10 @@
-import { useState } from "react"
-import { motion } from "framer-motion"
-import Button from "@/components/atoms/Button"
-import Input from "@/components/atoms/Input"
-import Select from "@/components/atoms/Select"
-import Textarea from "@/components/atoms/Textarea"
-import ApperIcon from "@/components/ApperIcon"
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import ApperIcon from "@/components/ApperIcon";
+import Textarea from "@/components/atoms/Textarea";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
 
 const TaskForm = ({ onAddTask }) => {
   const [title, setTitle] = useState("")
@@ -12,12 +12,13 @@ const TaskForm = ({ onAddTask }) => {
   const [priority, setPriority] = useState("medium")
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const validateForm = () => {
+const validateForm = () => {
     const newErrors = {}
     
     if (!title.trim()) {
       newErrors.title = "Task title is required"
+    } else if (title.trim().length > 100) {
+      newErrors.title = "Title must be 100 characters or less"
     }
     
     return newErrors
@@ -35,12 +36,10 @@ const TaskForm = ({ onAddTask }) => {
     
     try {
       await onAddTask({
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        status: "active",
-        createdAt: new Date().toISOString(),
-        completedAt: null
+        title_c: title.trim(),
+        description_c: description.trim(),
+        priority_c: priority,
+        status_c: "active"
       })
       
       // Reset form

@@ -18,12 +18,12 @@ const TaskFlow = () => {
   const [sortBy, setSortBy] = useState("created")
   const [showCompletion, setShowCompletion] = useState(false)
 
-  const loadTasks = async () => {
+const loadTasks = async () => {
     try {
       setError("")
       setLoading(true)
       const data = await taskService.getAll()
-      setTasks(data)
+      setTasks(data || [])
     } catch (err) {
       setError("Failed to load tasks. Please try again.")
       console.error("Error loading tasks:", err)
@@ -36,28 +36,32 @@ const TaskFlow = () => {
     loadTasks()
   }, [])
 
-  const handleAddTask = async (taskData) => {
+const handleAddTask = async (taskData) => {
     try {
       const newTask = await taskService.create(taskData)
-      setTasks(prev => [newTask, ...prev])
-      toast.success("Task added successfully!")
+      if (newTask) {
+        setTasks(prev => [newTask, ...prev])
+        toast.success("Task added successfully!")
+      }
     } catch (err) {
       toast.error("Failed to add task")
       console.error("Error adding task:", err)
     }
   }
 
-  const handleUpdateTask = async (id, updates) => {
+const handleUpdateTask = async (id, updates) => {
     try {
       const updatedTask = await taskService.update(id, updates)
-      setTasks(prev => prev.map(task => task.Id === id ? updatedTask : task))
-      
-      if (updates.status === "completed") {
-        setShowCompletion(true)
-        setTimeout(() => setShowCompletion(false), 1000)
-        toast.success("Task completed! Great job! 🎉")
-      } else {
-        toast.success("Task updated successfully!")
+      if (updatedTask) {
+        setTasks(prev => prev.map(task => task.Id === id ? updatedTask : task))
+        
+        if (updates.status_c === "completed" || updates.status === "completed") {
+          setShowCompletion(true)
+          setTimeout(() => setShowCompletion(false), 1000)
+          toast.success("Task completed! Great job! 🎉")
+        } else {
+          toast.success("Task updated successfully!")
+        }
       }
     } catch (err) {
       toast.error("Failed to update task")
@@ -76,33 +80,37 @@ const TaskFlow = () => {
     }
   }
 
-  const filteredAndSortedTasks = () => {
+const filteredAndSortedTasks = () => {
     let filtered = tasks
 
-    // Apply filter
+    // Apply filter - use database field names
     if (filter === "active") {
-      filtered = tasks.filter(task => task.status === "active")
+      filtered = tasks.filter(task => (task.status_c || task.status) === "active")
     } else if (filter === "completed") {
-      filtered = tasks.filter(task => task.status === "completed")
+      filtered = tasks.filter(task => (task.status_c || task.status) === "completed")
     }
 
     // Apply sort
     return filtered.sort((a, b) => {
       if (sortBy === "priority") {
         const priorityOrder = { high: 3, medium: 2, low: 1 }
-        return priorityOrder[b.priority] - priorityOrder[a.priority]
+        const aPriority = a.priority_c || a.priority || "medium"
+        const bPriority = b.priority_c || b.priority || "medium"
+        return priorityOrder[bPriority] - priorityOrder[aPriority]
       } else if (sortBy === "created") {
-        return new Date(b.createdAt) - new Date(a.createdAt)
+        const aDate = new Date(a.CreatedOn || a.createdAt || 0)
+        const bDate = new Date(b.CreatedOn || b.createdAt || 0)
+        return bDate - aDate
       }
       return 0
     })
   }
 
-  const displayTasks = filteredAndSortedTasks()
+const displayTasks = filteredAndSortedTasks()
   const taskStats = {
     total: tasks.length,
-    active: tasks.filter(t => t.status === "active").length,
-    completed: tasks.filter(t => t.status === "completed").length,
+    active: tasks.filter(t => (t.status_c || t.status) === "active").length,
+    completed: tasks.filter(t => (t.status_c || t.status) === "completed").length,
   }
 
   if (loading) {
